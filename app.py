@@ -1,6 +1,7 @@
 import streamlit as st
 from groq import Groq
-import pyttsx3
+from gtts import gTTS
+import io
 import json
 from azure.core.credentials import AzureKeyCredential
 from azure.search.documents import SearchClient
@@ -196,30 +197,33 @@ def get_coach_response(user_message, mood):
     return coach_response
 
 # Text-to-speech configuration
+from gtts import gTTS
+import io
+
 def text_to_speech(text, mood):
     try:
-        engine = pyttsx3.init()
+        # Map your unhinged coach moods to fun accents/speeds!
         if mood == "angry":
-            engine.setProperty('rate', 200)
-            engine.setProperty('pitch', 1.5)
+            # British accent, slightly accelerated
+            tts = gTTS(text=text, lang='en', tld='co.uk', slow=False) 
         elif mood == "overwhelmed":
-            engine.setProperty('rate', 120)
-            engine.setProperty('pitch', 0.8)
+            # US accent, forced slow pace
+            tts = gTTS(text=text, lang='en', tld='com', slow=True)
         elif mood == "happy":
-            engine.setProperty('rate', 180)
-            engine.setProperty('pitch', 1.2)
+            # Australian accent for chaotic positive energy
+            tts = gTTS(text=text, lang='en', tld='com.au', slow=False)
         else:
-            engine.setProperty('rate', 150)
-            engine.setProperty('pitch', 1.0)
+            # Default US voice
+            tts = gTTS(text=text, lang='en', tld='com', slow=False)
         
-        # Save to file instead of playing directly
-        audio_file = "coach_response.mp3"
-        engine.save_to_file(text, audio_file)
-        engine.runAndWait()
+        # Save audio directly into memory (BytesIO object) instead of writing a local file
+        audio_fp = io.BytesIO()
+        tts.write_to_fp(audio_fp)
+        audio_fp.seek(0)
         
-        return audio_file
+        return audio_fp
     except Exception as e:
-        print(f"Error: {e}")
+        print(f"Audio Error: {e}")
         return None
 
 def generate_speech_azure(text, api_key, region):
@@ -255,15 +259,17 @@ if st.session_state.messages:
             st.chat_message("assistant").write(message["content"])
 
 # Listen to Coach (voice)
+# Listen to Coach (voice)
 if st.session_state.messages and len(st.session_state.messages) > 0:
     last_message = st.session_state.messages[-1]
     if last_message["role"] == "assistant":
         st.markdown("---")
         st.markdown("### 🔊 Listen to Coach:")
         
-        audio_file = text_to_speech(last_message["content"], current_mood)
-        if audio_file:
-            st.audio(audio_file)
+        audio_data = text_to_speech(last_message["content"], current_mood)
+        if audio_data:
+            # Pass the in-memory bytes directly to Streamlit's audio element
+            st.audio(audio_data, format="audio/mp3")
 st.divider()
 st.caption("Remember: This coach is here to help you think clearly, not replace actual support.")
 

@@ -1,6 +1,6 @@
 streamlit
 groq
-pyttsx3
+gTTS
 azure-core
 azure-search-documents
 python-dotenv
