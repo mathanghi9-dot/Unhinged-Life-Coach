@@ -1,10 +1,6 @@
-import streamlit as st
-from groq import Groq
-import pyttsx3
-import json
-from azure.core.credentials import AzureKeyCredential
-from azure.search.documents import SearchClient
-from dotenv import load_dotenv
-import os
-
-load_dotenv()
+streamlit
+groq
+pyttsx3
+azure-core
+azure-search-documents
+python-dotenv
